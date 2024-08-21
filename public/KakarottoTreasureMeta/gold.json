@@ -1,0 +1,8 @@
+{
+  "name": "Gold Treasure Chest",
+  "description": "A gleaming gold chest for your prized possessions.",
+  "image": "ipfs://QmfRqtVTvj4fFYKZiAXZXCoPJ4dPNDF5KHMimuHHrKKvNn",
+  "attributes": {
+    "rarity": 2
+  }
+}
