@@ -5,6 +5,7 @@ import {
   getTreasureRarityController,
   mintTreasureController,
   openTreasureController,
+  retrieveTreasureMetadataController,
 } from "../controllers/treasure.controller.js";
 
 import {
@@ -12,12 +13,14 @@ import {
   openTreasureValidation,
 } from "../middlewares/treasureValidation.middleware.js";
 
-router.get("/:tokenId", async (req, res) => {
-  res.send("Hello World");
-});
+router.get("/", retrieveTreasureMetadataController);
 router.get("/rarity", getTreasureRarityController);
 router.get("/metadata", getTreasuresMetadataController);
 router.post("/mint", mintTreasureValidation, mintTreasureController);
-router.post("/open", openTreasureValidation, openTreasureController);
+router.post(
+  "/open",
+  // openTreasureValidation,
+  openTreasureController
+);
 
 export { router };

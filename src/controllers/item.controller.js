@@ -1,4 +1,4 @@
-import { mintItem } from "../services/item.service.js";
+import { mintItem, retrieveItemMetadata } from "../services/item.service.js";
 
 export const mintItemNFTController = async (req, res) => {
   try {
@@ -15,6 +15,19 @@ export const mintItemNFTController = async (req, res) => {
     return response.error
       ? res.status(response.error.code).json(response.error)
       : res.status(response.code).json(response);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json(error);
+  }
+};
+
+export const retrieveItemMetadataController = async (req, res) => {
+  try {
+    const { tokenURI } = req.body;
+    const response = await retrieveItemMetadata({ tokenURI });
+    return response.error
+      ? res.status(response.error.code).json(response.error)
+      : res.status(response.code).json(response.data);
   } catch (error) {
     console.log(error);
     return res.status(500).json(error);

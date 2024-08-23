@@ -2,9 +2,35 @@ import {
   getRandomValueInRange,
   itemAttributeWeight,
 } from "../utils/attribute.util.js";
-import { rarityNumbers } from "../utils/rarity.util.js";
+import { itemCategories, itemCollections } from "../utils/collections.util.js";
+import { rarityNumbers, rarityPicked } from "../utils/rarity.util.js";
+import { capitalizeFirstLetter } from "../utils/string.util.js";
 
 const attributeNumber = ["Power", "Defend", "Agility", "Intelligence", "Luck"];
+
+const categoryNumber = [
+  "weapon",
+  "head",
+  "body",
+  "long",
+  "shoes",
+  "shield",
+  "ring",
+  "necklace",
+];
+
+const rarityWeights = [
+  ["Bronze", 700],
+  ["Silver", 500],
+  ["Gold", 150],
+  ["Platinum", 100],
+  ["Diamond", 50],
+];
+
+function generateItemRarity() {
+  const rarity = rarityPicked(rarityWeights);
+  return rarityNumbers[rarity];
+}
 
 function getRandomAttributeNumber(quantity) {
   let attributes = [];
@@ -35,11 +61,7 @@ function getRandomIsIncreases(quantity) {
   return result;
 }
 
-function getRandomCharacterAttributeValue(
-  count,
-  isPercentages,
-  attributeWeight
-) {
+function getRandomItemAttributeValue(count, isPercentages, attributeWeight) {
   let result = [];
   for (let i = 0; i < count; i++) {
     if (isPercentages[i]) {
@@ -82,7 +104,7 @@ function generateItemAttribute(rarity, attributeWeights) {
       result._attributes = getRandomAttributeNumber(1);
       result._isPercentages = getRandomIsPercentage(1);
       result._isIncreases = getRandomIsIncreases(1);
-      result._values = getRandomCharacterAttributeValue(
+      result._values = getRandomItemAttributeValue(
         result.count,
         result._isPercentages,
         attributeWeights["Bronze"]
@@ -93,7 +115,7 @@ function generateItemAttribute(rarity, attributeWeights) {
       result._attributes = getRandomAttributeNumber(2);
       result._isPercentages = getRandomIsPercentage(2);
       result._isIncreases = getRandomIsPercentage(2);
-      result._values = getRandomCharacterAttributeValue(
+      result._values = getRandomItemAttributeValue(
         result.count,
         result._isPercentages,
         attributeWeights["Silver"]
@@ -104,7 +126,7 @@ function generateItemAttribute(rarity, attributeWeights) {
       result._attributes = getRandomAttributeNumber(2);
       result._isPercentages = getRandomIsPercentage(2);
       result._isIncreases = getRandomIsPercentage(2);
-      result._values = getRandomCharacterAttributeValue(
+      result._values = getRandomItemAttributeValue(
         result.count,
         result._isPercentages,
         attributeWeights["Gold"]
@@ -115,7 +137,7 @@ function generateItemAttribute(rarity, attributeWeights) {
       result._attributes = getRandomAttributeNumber(3);
       result._isPercentages = getRandomIsPercentage(3);
       result._isIncreases = getRandomIsPercentage(3);
-      result._values = getRandomCharacterAttributeValue(
+      result._values = getRandomItemAttributeValue(
         result.count,
         result._isPercentages,
         attributeWeights["Platinum"]
@@ -126,7 +148,7 @@ function generateItemAttribute(rarity, attributeWeights) {
       result._attributes = getRandomAttributeNumber(4);
       result._isPercentages = getRandomIsPercentage(4);
       result._isIncreases = getRandomIsPercentage(4);
-      result._values = getRandomCharacterAttributeValue(
+      result._values = getRandomItemAttributeValue(
         result.count,
         result._isPercentages,
         attributeWeights["Diamond"]
@@ -136,48 +158,114 @@ function generateItemAttribute(rarity, attributeWeights) {
   return result;
 }
 
-function generateItemMetadata({ name, description, image }) {
-  try {
-    // Generate Rarity & Attributes
-    const rarity = rarityPicked({
-      raritiesWeight: rarityWeight,
-    });
-    const rarityNumber = rarityNumbers[rarity];
-    const attributesData = generateItemAttribute(
-      rarityNumber,
-      itemAttributeWeight
-    );
-    let attributesMetadata = [
-      {
-        trait_type: "Rarity",
-        value: rarity,
-      },
-    ];
-    for (let i = 0; i < attributesData.count; i++) {
-      attributesMetadata.push({
-        display_type: attributesData._isPercentages[i]
-          ? "boost_percentage"
-          : "boost_number",
-        trait_type: attributesData._attributes[i],
-        value: attributesData._isIncreases[i]
-          ? attributesData._values[i]
-          : -attributesData._values[i],
-      });
-    }
-    const metadata = {
-      name,
-      description,
-      image,
-      attributes: attributesMetadata,
-    };
-    return {
-      metadata,
-      attributesData,
-    };
-  } catch (error) {
-    console.log(error);
-    return null;
+function generateItemCategoryAndCollection() {
+  const categoryRandom = Math.floor(Math.random() * categoryNumber.length);
+  const collectionRandom = Math.floor(
+    Math.random() * (itemCollections[categoryNumber[categoryRandom]] + 1)
+  );
+  let dataResult = { name: "", description: "", tokenURI: "" };
+  switch (categoryRandom) {
+    case 0:
+      const weaponRandom = Math.floor(Math.random() * 1);
+      const weaponData = itemCategories.weapon[weaponRandom];
+      dataResult.name = weaponData.name;
+      dataResult.description = weaponData.description;
+      dataResult.tokenURI =
+        weaponData.tokenURI +
+        (weaponRandom == 0
+          ? `Melee_${collectionRandom}.png`
+          : weaponRandom == 1
+          ? `Bow_${collectionRandom}.png`
+          : `Melee_${collectionRandom}.png`);
+      break;
+    case 6:
+      const ringData = itemCategories.ring[0];
+      dataResult.name = ringData.name;
+      dataResult.description = ringData.description;
+      dataResult.tokenURI = ringData.tokenURI + `Ring_${collectionRandom}.png`;
+      break;
+    case 7:
+      const neckLace = itemCategories.necklace[0];
+      dataResult.name = neckLace.name;
+      dataResult.description = neckLace.description;
+      dataResult.tokenURI =
+        neckLace.tokenURI + `Necklace_${collectionRandom}.png`;
+      break;
+    default:
+      const defaultData = itemCategories[categoryNumber[categoryRandom]][0];
+      dataResult.name = defaultData.name;
+      dataResult.description = defaultData.description;
+      dataResult.tokenURI =
+        defaultData.tokenURI +
+        `${capitalizeFirstLetter(
+          categoryNumber[categoryRandom]
+        )}_${collectionRandom}.png`;
+      break;
   }
+  return {
+    dataResult,
+    collection: collectionRandom,
+    category: capitalizeFirstLetter(categoryNumber[categoryRandom]),
+  };
 }
 
-export { generateItemAttribute, generateItemMetadata };
+function generateItemMetadata({
+  name,
+  description,
+  image,
+  collection,
+  category,
+  rarity,
+  count,
+  attributes,
+  isPercentages,
+  isIncreases,
+  values,
+}) {
+  // Attributes Metadata
+  let attributesMetadata = [
+    {
+      trait_type: "Category",
+      value: category,
+    },
+    {
+      trait_type: "Collection",
+      value: collection,
+    },
+    {
+      trait_type: "Rarity",
+      value: rarity,
+    },
+  ];
+
+  Array.from({ length: count }, (_, i) => {
+    attributesMetadata.push({
+      display_type: isPercentages[i] ? "boost_percentage" : "boost_number",
+      trait_type: attributes[i],
+      value: isIncreases[i] ? values[i] : -values[i],
+    });
+  });
+
+  const metadata = {
+    name,
+    description,
+    image,
+    attributes: attributesMetadata,
+  };
+
+  const jsonFile = new Blob([JSON.stringify(metadata)], {
+    type: "application/json",
+  });
+
+  return {
+    metadata,
+    jsonFile,
+  };
+}
+
+export {
+  generateItemAttribute,
+  generateItemMetadata,
+  generateItemCategoryAndCollection,
+  generateItemRarity,
+};

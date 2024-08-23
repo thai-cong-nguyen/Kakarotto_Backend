@@ -3,6 +3,7 @@ import {
   getTreasureRarity,
   mintTreasureNFT,
   openTreasureNFT,
+  retrieveTreasureMetadata,
 } from "../services/treasure.service.js";
 
 const getTreasuresMetadataController = async (req, res) => {
@@ -20,7 +21,7 @@ const getTreasuresMetadataController = async (req, res) => {
 
 const getTreasureRarityController = async (req, res) => {
   try {
-    const response = getTreasureRarity();
+    const response = await getTreasureRarity();
     return response.error
       ? res.status(response.error.code).json(response.error)
       : res.status(response.code).json(response);
@@ -50,8 +51,13 @@ const mintTreasureController = async (req, res) => {
 
 const openTreasureController = async (req, res) => {
   try {
-    const { creator, signature, value } = req.body;
-    const response = await openTreasureNFT({ creator, signature, value });
+    const { creator, signature, value, treasureRarity } = req.body;
+    const response = await openTreasureNFT({
+      creator,
+      signature,
+      value,
+      treasureRarity,
+    });
     return response.error
       ? res.status(response.error.code).json(response.error)
       : res.status(response.code).json(response);
@@ -61,9 +67,23 @@ const openTreasureController = async (req, res) => {
   }
 };
 
+const retrieveTreasureMetadataController = async (req, res) => {
+  try {
+    const { tokenURI } = req.body;
+    const response = await retrieveTreasureMetadata({ tokenURI });
+    return response.error
+      ? res.status(response.error.code).json(response.error)
+      : res.status(response.code).json(response.data);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json(error);
+  }
+};
+
 export {
   getTreasuresMetadataController,
   getTreasureRarityController,
   mintTreasureController,
   openTreasureController,
+  retrieveTreasureMetadataController,
 };

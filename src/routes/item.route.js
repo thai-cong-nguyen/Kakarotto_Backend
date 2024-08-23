@@ -1,9 +1,11 @@
 import express from "express";
-import { mintItemNFTController } from "../controllers/item.controller.js";
+import {
+  mintItemNFTController,
+  retrieveItemMetadataController,
+} from "../controllers/item.controller.js";
 const router = express.Router();
 
-router.get("/:tokenId", async (req, res) => {
-  res.send("Hello World");
-});
+router.get("/", retrieveItemMetadataController);
 router.post("/mint", mintItemNFTController);
+
 export { router };

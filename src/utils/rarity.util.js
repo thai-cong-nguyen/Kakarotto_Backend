@@ -10,7 +10,7 @@ const rarityNumbers = {
   Diamond: 4,
 };
 
-const rarityWeight = [
+const characterRarityWeight = [
   ["Bronze", 500],
   ["Silver", 300],
   ["Gold", 150],
@@ -18,9 +18,9 @@ const rarityWeight = [
   ["Diamond", 10],
 ];
 
-const rarityPicked = ({ raritiesWeight }) => {
-  const rarities = picker.pick(raritiesWeight);
-  return rarities ? rarities : "bronze";
+const rarityPicked = (rarityWeights) => {
+  const rarities = picker.pick(rarityWeights);
+  return rarities ? rarities : "Bronze";
 };
 
-export { rarityPicked, rarityNumbers, rarityWeight };
+export { rarityPicked, rarityNumbers, characterRarityWeight };

@@ -19,7 +19,7 @@ export async function retrieveTokenURIFromBucket(fileName, bucket) {
 }
 
 export async function deleteFileFromBucket(fileName, bucket) {
-  return await supabase.storage.from(bucket).remove([fileName]);
+  return await supabase.storage.from(bucket).remove(fileName);
 }
 
 export async function replaceExistingFileInBucket(path, bucket, file) {

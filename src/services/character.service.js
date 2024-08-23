@@ -1,8 +1,3 @@
-import {
-  rarityPicked,
-  rarityNumbers,
-  rarityWeight,
-} from "../utils/rarity.util.js";
 import "dotenv/config";
 import apiReturn from "../utils/apiReturn.util.js";
 import { createNFTCharacter } from "../contracts/character.contract.js";
@@ -13,15 +8,19 @@ import {
   retrieveTokenURIFromBucket,
   uploadFileToBucket,
 } from "../modules/supabase.module.js";
-import { generateCharacterAttributes } from "../modules/character.module.js";
+import {
+  generateCharacterAttributes,
+  generateCharacterMetadata,
+  generateCharacterRarity,
+} from "../modules/character.module.js";
 import { characterAttributeWeight } from "../utils/attribute.util.js";
 import axios from "axios";
+import { uploadMetadataSupabase } from "../modules/metadata.module.js";
 
 const PINATA_KAKAROTTO_CHARACTER_GROUP_CID =
   process.env.PINATA_KAKAROTTO_CHARACTER_GROUP_CID;
 const PINATA_CHARACTER_METADATA_GROUP_CID =
   process.env.PINATA_CHARACTER_METADATA_GROUP_CID;
-let counter = 0;
 
 const generateImage = async () => {
   try {
@@ -42,55 +41,12 @@ const generateImage = async () => {
   }
 };
 
-const generateAttribute = async () => {
+const generateAttribute = async ({ rarity }) => {
   try {
-    // Generate Rarity & Attributes
-    const rarity = rarityPicked({
-      raritiesWeight: rarityWeight,
-    });
-    const rarityNumber = rarityNumbers[rarity];
+    // Generate Attributes
     const seedValue = Math.floor(Math.random() * 100 * Date.now());
     const { power, defend, agility, intelligence, luck } =
       generateCharacterAttributes(characterAttributeWeight, rarity, seedValue);
-    const attributesMetadata = [
-      {
-        trait_type: "Level",
-        value: 0,
-      },
-      {
-        trait_type: "Exp",
-        value: 0,
-      },
-      {
-        trait_type: "Rarity",
-        value: rarity,
-      },
-      {
-        display_type: "boost_number",
-        trait_type: "Power",
-        value: power,
-      },
-      {
-        display_type: "boost_number",
-        trait_type: "Defend",
-        value: defend,
-      },
-      {
-        display_type: "boost_number",
-        trait_type: "Agility",
-        value: agility,
-      },
-      {
-        display_type: "boost_number",
-        trait_type: "Intelligence",
-        value: intelligence,
-      },
-      {
-        display_type: "boost_number",
-        trait_type: "Luck",
-        value: luck,
-      },
-    ];
     return apiReturn.success(200, "Attribute generated", {
       rarityNumber,
       attributes: {
@@ -100,42 +56,10 @@ const generateAttribute = async () => {
         intelligence,
         luck,
       },
-      attributesMetadata,
     });
   } catch (error) {
     console.log(error);
     return apiReturn.error(400, "Error generating Attribute");
-  }
-};
-
-const generateMetadata = async ({ name, description, image }) => {
-  try {
-    const { data: attributesData } = await generateAttribute();
-    const metadata = {
-      name,
-      description,
-      image,
-      attributes: attributesData.attributesMetadata,
-    };
-    const jsonFile = new Blob([JSON.stringify(metadata)], {
-      type: "application/json",
-    });
-    const uploadMetadataToSupabase = await uploadFileToBucket(
-      "character_" + Date.now(),
-      "Character",
-      jsonFile
-    );
-    if (uploadMetadataToSupabase.error) {
-      throw new Error(uploadMetadataToSupabase.error.message);
-    }
-    return apiReturn.success(200, "Metadata generated", {
-      supabase: uploadMetadataToSupabase.data,
-      metadata,
-      attributesData,
-    });
-  } catch (error) {
-    console.log(error);
-    return apiReturn.error(400, error.message);
   }
 };
 
@@ -181,29 +105,55 @@ const mintCharacter = async ({
   networkId,
 }) => {
   try {
-    const { data: metadataData, error: metadataError } = await generateMetadata(
-      {
-        name,
-        description,
-        image,
-      }
-    );
-    if (metadataError) {
-      throw new Error(metadataError.message);
+    // Generate Rarity
+    const rarity = generateCharacterRarity();
+
+    // Generate Attribute
+    const seedValue = Math.floor(Math.random() * 100 * Date.now());
+    const { power, defend, agility, intelligence, luck } =
+      generateCharacterAttributes(characterAttributeWeight, rarity, seedValue);
+
+    // Generate Metadata
+    const { metadata, jsonFile } = generateCharacterMetadata({
+      name,
+      description,
+      image,
+      level: 0,
+      exp: 0,
+      rarity,
+      power,
+      defend,
+      agility,
+      intelligence,
+      luck,
+    });
+
+    // Upload Metadata to Supabase
+    const uploadMetadataResponse = await uploadMetadataSupabase({
+      jsonFile,
+      fileName: "Character_" + Date.now(),
+      bucket: "Character",
+    });
+    if (uploadMetadataResponse.error) {
+      throw new Error(uploadMetadataResponse.message);
     }
+    const tokenURI = uploadMetadataResponse.path;
+
+    // Generate the Character NFT
     const generateCharacterResponse = await generateCharacter({
       creator,
       createNFTSignature,
-      rarityNumber: metadataData.attributesData.rarityNumber,
-      attributes: metadataData.attributesData.attributes,
-      tokenURI: metadataData.supabase.path,
+      rarityNumber: rarity,
+      attributes: [power, defend, agility, intelligence, luck],
+      tokenURI: tokenURI,
       networkId,
     });
     if (generateCharacterResponse.error) {
       throw new Error(generateCharacterResponse.error.message);
     }
+
     return apiReturn.success(200, "Character minted", {
-      metadata: metadataData,
+      metadata: metadata,
       character: generateCharacterResponse.data,
     });
   } catch (error) {
@@ -212,11 +162,21 @@ const mintCharacter = async ({
   }
 };
 
-const retrieveMetadata = async ({ tokenURI }) => {
+const retrieveCharacterMetadata = async ({ tokenURI }) => {
   try {
     const { data } = await retrieveTokenURIFromBucket(tokenURI, "Character");
-    console.log(data);
-    return apiReturn.success(200, "Metadata retrieved", data);
+    if (data.error) {
+      throw new Error(data.message);
+    }
+    if (data.publicUrl == null || data.publicUrl == "") {
+      throw new Error("Character metadata not found");
+    }
+    const { data: metadata } = await axios.get(data.publicUrl, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return apiReturn.success(200, "Metadata retrieved", metadata);
   } catch (error) {
     console.log(error);
     return apiReturn.error(400, "Error retrieving metadata");
@@ -225,16 +185,20 @@ const retrieveMetadata = async ({ tokenURI }) => {
 
 const upLevelCharacter = async ({ tokenURI }) => {
   try {
+    // Retrieve Metadata
     const { data } = await retrieveTokenURIFromBucket(tokenURI, "Character");
     const { data: metadata } = await axios.get(data.publicUrl, {
       headers: {
         "Content-Type": "application/json",
       },
     });
-    metadata.attributes[0].value += 1;
-    for (let i = 3; i < metadata.attributes.length; i++) {
-      metadata.attributes[i].value += 1;
-    }
+
+    // Update the metadata
+    [0, 3, 4, 5, 6, 7].forEach((index) => {
+      metadata.attributes[index].value += 1;
+    });
+
+    // Replace the existing metadata
     const jsonFile = new Blob([JSON.stringify(metadata)], {
       type: "application/json",
     });
@@ -246,6 +210,7 @@ const upLevelCharacter = async ({ tokenURI }) => {
     if (replaceMetadata.error) {
       throw new Error(replaceMetadata.error.message);
     }
+
     return apiReturn.success(200, "Metadata up level", {
       supabase: replaceMetadata.data,
       metadata,
@@ -260,8 +225,7 @@ export {
   generateCharacter,
   generateImage,
   generateAttribute,
-  generateMetadata,
   mintCharacter,
-  retrieveMetadata,
+  retrieveCharacterMetadata,
   upLevelCharacter,
 };

@@ -1,6 +1,11 @@
+import { rarityPicked, rarityNumbers } from "../utils/rarity.util.js";
 import { getRandomValueInRange } from "../utils/attribute.util.js";
 
-function generateCharacterAttributes(attributeWeight, rarity, seedValue) {
+export const generateCharacterAttributes = (
+  attributeWeight,
+  rarity,
+  seedValue
+) => {
   const power = getRandomValueInRange(
     attributeWeight[rarity].power.range[0],
     attributeWeight[rarity].power.range[1],
@@ -43,6 +48,77 @@ function generateCharacterAttributes(attributeWeight, rarity, seedValue) {
     intelligence,
     luck,
   };
-}
+};
 
-export { generateCharacterAttributes };
+export const generateCharacterRarity = (characterRarityWeight) => {
+  const rarity = rarityPicked(characterRarityWeight);
+  const rarityNumber = rarityNumbers[rarity];
+  return rarityNumber;
+};
+
+export const generateCharacterMetadata = ({
+  name,
+  description,
+  image,
+  level,
+  exp,
+  rarity,
+  power,
+  defend,
+  agility,
+  intelligence,
+  luck,
+}) => {
+  const metadata = {
+    name,
+    description,
+    image,
+  };
+  metadata.attribute = [
+    {
+      trait_type: "Level",
+      value: level,
+    },
+    {
+      trait_type: "Exp",
+      value: exp,
+    },
+    {
+      trait_type: "Rarity",
+      value: rarity,
+    },
+    {
+      display_type: "boost_number",
+      trait_type: "Power",
+      value: power,
+    },
+    {
+      display_type: "boost_number",
+      trait_type: "Defend",
+      value: defend,
+    },
+    {
+      display_type: "boost_number",
+      trait_type: "Agility",
+      value: agility,
+    },
+    {
+      display_type: "boost_number",
+      trait_type: "Intelligence",
+      value: intelligence,
+    },
+    {
+      display_type: "boost_number",
+      trait_type: "Luck",
+      value: luck,
+    },
+  ];
+  const jsonFile = new Blob([JSON.stringify(metadata)], {
+    type: "application/json",
+  });
+
+  return {
+    metadata,
+    jsonFile,
+  };
+};

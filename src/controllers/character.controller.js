@@ -2,9 +2,8 @@ import {
   generateCharacter,
   generateImage,
   generateAttribute,
-  generateMetadata,
   mintCharacter,
-  retrieveMetadata,
+  retrieveCharacterMetadata,
   upLevelCharacter,
 } from "../services/character.service.js";
 
@@ -59,22 +58,22 @@ const generateAttributeController = async (req, res) => {
   }
 };
 
-const generateMetadataController = async (req, res) => {
-  try {
-    const { name, description, image } = req.body;
-    const response = await generateMetadata({
-      name,
-      description,
-      image,
-    });
-    return response.error
-      ? res.status(response.error.code).json(response.error)
-      : res.status(response.code).json(response);
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json(error);
-  }
-};
+// const generateMetadataController = async (req, res) => {
+//   try {
+//     const { name, description, image } = req.body;
+//     const response = await generateMetadata({
+//       name,
+//       description,
+//       image,
+//     });
+//     return response.error
+//       ? res.status(response.error.code).json(response.error)
+//       : res.status(response.code).json(response);
+//   } catch (error) {
+//     console.log(error);
+//     return res.status(500).json(error);
+//   }
+// };
 
 const mintNFTCharacterController = async (req, res) => {
   try {
@@ -97,13 +96,13 @@ const mintNFTCharacterController = async (req, res) => {
   }
 };
 
-const retrieveMetadataController = async (req, res) => {
+const retrieveCharacterMetadataController = async (req, res) => {
   try {
     const { tokenURI } = req.query;
-    const response = await retrieveMetadata({ tokenURI });
+    const response = await retrieveCharacterMetadata({ tokenURI });
     return response.error
       ? res.status(response.error.code).json(response.error)
-      : res.status(response.code).json(response);
+      : res.status(response.code).json(response.data);
   } catch (error) {
     console.log(error);
     return res.status(500).json(error);
@@ -127,8 +126,7 @@ export {
   generateCharacterController,
   generateImageController,
   generateAttributeController,
-  generateMetadataController,
   mintNFTCharacterController,
-  retrieveMetadataController,
+  retrieveCharacterMetadataController,
   upLevelCharacterController,
 };

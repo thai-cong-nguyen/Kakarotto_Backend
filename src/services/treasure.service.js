@@ -1,19 +1,22 @@
 import "dotenv/config";
-import { rarityPicked } from "../utils/rarity.util.js";
+
 import { fetchFile } from "./pinata.service.js";
 import apiReturn from "../utils/apiReturn.util.js";
 import { mintNFT, openNFT } from "../contracts/treasure.contract.js";
+import {
+  generateItemRarityTreasureOpening,
+  generateItemAttributeTreasureOpening,
+  generateTreasureRarity,
+} from "../modules/treasure.module.js";
+import { itemAttributeWeight } from "../utils/attribute.util.js";
+import {
+  generateItemCategoryAndCollection,
+  generateItemMetadata,
+} from "../modules/item.module.js";
+import { uploadMetadataSupabase } from "../modules/metadata.module.js";
 
 const PINATA_TREASURE_METADATA_GROUP_CID =
   process.env.PINATA_TREASURE_METADATA_GROUP_CID;
-
-const rarityWeight = [
-  ["Bronze", 700],
-  ["Silver", 500],
-  ["Gold", 150],
-  ["Platinum", 100],
-  ["Diamond", 50],
-];
 
 const getTreasuresMetadata = async ({ rarityNumber }) => {
   try {
@@ -60,13 +63,7 @@ const getTreasuresMetadata = async ({ rarityNumber }) => {
 
 const getTreasureRarity = async () => {
   try {
-    const rarity = rarityPicked({
-      raritiesWeight: rarityWeight,
-    });
-    const result = rarityWeight.findIndex(
-      (rarityItem) => rarityItem[0] === rarity
-    );
-    console.log(result);
+    const result = generateTreasureRarity();
     return apiReturn.success(200, "Treasure rarity fetched", result);
   } catch (error) {
     console.log(error);
@@ -76,8 +73,7 @@ const getTreasureRarity = async () => {
 
 const mintTreasureNFT = async ({ creator, signature, value, data }) => {
   try {
-    // TODO: Implement randomization of tokenId
-    const tokenId = "0";
+    const tokenId = generateTreasureRarity();
     const txResponse = await mintNFT({
       creator,
       signature,
@@ -98,25 +94,66 @@ const mintTreasureNFT = async ({ creator, signature, value, data }) => {
   }
 };
 
-const openTreasureNFT = async ({ creator, signature, value }) => {
+const openTreasureNFT = async ({
+  creator,
+  signature,
+  value,
+  treasureRarity,
+}) => {
+  let path = "";
   try {
-    // TODO: Implement randomization of some attributes
-    const itemURI = "";
-    const itemRarity = "";
-    const itemAttributeCount = "";
-    const attributes = "";
-    const attributeValues = "";
-    const isIncreases = "";
-    const isPercentages = "";
+    // Generate Item rarity and attributes when opening treasure
+    const itemRarity = generateItemRarityTreasureOpening(treasureRarity);
+    const {
+      count,
+      _attributes: attributes,
+      _values: values,
+      _isIncreases: isIncreases,
+      _isPercentages: isPercentages,
+      rarityNumber: rarity,
+    } = generateItemAttributeTreasureOpening(itemRarity, itemAttributeWeight);
+
+    // Generate Item Category and Collection
+    const { dataResult, collection, category } =
+      generateItemCategoryAndCollection();
+
+    // Generate Item Metadata
+    const { metadata } = generateItemMetadata({
+      name: dataResult.name,
+      description: dataResult.description,
+      image: PINATA_GATEWAY_URL + "/ipfs/" + dataResult.tokenURI,
+      collection,
+      category,
+      rarity,
+      count,
+      attributes,
+      isPercentages,
+      isIncreases,
+      values,
+    });
+    console.log(metadata);
+
+    // Upload the Metadata to Supabase
+    const uploadMetadataToSupabase = await uploadMetadataSupabase({
+      metadata,
+      fileName: "item_" + Date.now(),
+      bucket: "Item",
+    });
+    if (uploadMetadataToSupabase.error) {
+      throw new Error(uploadMetadataToSupabase.error.message);
+    }
+    path = uploadMetadataToSupabase.data.path;
+
+    // Open the Treasure NFT
     const txResponse = await openNFT({
       creator,
       signature,
       value,
       itemURI,
-      itemRarity,
-      itemAttributeCount,
+      rarityNumber,
+      count,
       attributes,
-      attributeValues,
+      values,
       isIncreases,
       isPercentages,
     });
@@ -124,17 +161,42 @@ const openTreasureNFT = async ({ creator, signature, value }) => {
     const result = {
       transactionHash: txResponse.transactionHash,
       itemURI: itemURI,
-      itemRarity: itemRarity,
-      itemAttributeCount: itemAttributeCount,
+      itemRarity: rarityNumber,
+      itemAttributeCount: count,
       attributes: attributes,
-      attributeValues: attributeValues,
+      attributeValues: values,
       isIncreases: isIncreases,
       isPercentages: isPercentages,
     };
+
     return apiReturn.success(200, "Treasure NFT opened", result);
   } catch (error) {
     console.log(error);
+    if (path) {
+      await deleteFileFromBucket([path], "Item");
+    }
     return apiReturn.error(400, "Error opening treasure");
+  }
+};
+
+const retrieveTreasureMetadata = async ({ tokenURI }) => {
+  try {
+    const { data } = await retrieveTokenURIFromBucket(tokenURI, "Treasure");
+    if (data.error) {
+      throw new Error(data.message);
+    }
+    if (data.publicUrl == null || data.publicUrl == "") {
+      throw new Error("Character metadata not found");
+    }
+    const { data: metadata } = await axios.get(data.publicUrl, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return apiReturn.success(200, "Metadata retrieved", metadata);
+  } catch (error) {
+    console.log(error);
+    return apiReturn.error(400, "Error retrieving treasure metadata");
   }
 };
 
@@ -143,4 +205,5 @@ export {
   getTreasureRarity,
   mintTreasureNFT,
   openTreasureNFT,
+  retrieveTreasureMetadata,
 };
