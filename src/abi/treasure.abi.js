@@ -5,6 +5,8 @@ const treasureABI = [
       { name: "_tokenURI", type: "string", internalType: "string" },
       { name: "_kakarottoItem", type: "address", internalType: "address" },
       { name: "_initialOwner", type: "address", internalType: "address" },
+      { name: "_feeToken", type: "address", internalType: "contract IERC20" },
+      { name: "_price", type: "uint256", internalType: "uint256" },
     ],
     stateMutability: "nonpayable",
   },
@@ -108,6 +110,29 @@ const treasureABI = [
   },
   {
     type: "function",
+    name: "changeKakarottoItem",
+    inputs: [
+      { name: "_kakarottoItem", type: "address", internalType: "address" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "feeCollector",
+    inputs: [],
+    outputs: [{ name: "", type: "address", internalType: "address" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "feeToken",
+    inputs: [],
+    outputs: [{ name: "", type: "address", internalType: "contract IERC20" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "isApprovedForAll",
     inputs: [
       { name: "account", type: "address", internalType: "address" },
@@ -152,7 +177,11 @@ const treasureABI = [
         type: "uint8[]",
         internalType: "enum NFTLibrary.Attribute[]",
       },
-      { name: "_values", type: "uint256[]", internalType: "uint256[]" },
+      {
+        name: "_attributeValues",
+        type: "uint256[]",
+        internalType: "uint256[]",
+      },
       { name: "_isIncreases", type: "bool[]", internalType: "bool[]" },
       { name: "_isPercentss", type: "bool[]", internalType: "bool[]" },
     ],
@@ -164,6 +193,13 @@ const treasureABI = [
     name: "owner",
     inputs: [],
     outputs: [{ name: "", type: "address", internalType: "address" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "price",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
     stateMutability: "view",
   },
   {
@@ -215,6 +251,24 @@ const treasureABI = [
     inputs: [
       { name: "operator", type: "address", internalType: "address" },
       { name: "approved", type: "bool", internalType: "bool" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "setFeeCollector",
+    inputs: [
+      { name: "_feeCollector", type: "address", internalType: "address" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "setFeeToken",
+    inputs: [
+      { name: "_feeToken", type: "address", internalType: "contract IERC20" },
     ],
     outputs: [],
     stateMutability: "nonpayable",
@@ -387,6 +441,16 @@ const treasureABI = [
     ],
     anonymous: false,
   },
+  {
+    type: "error",
+    name: "AddressEmptyCode",
+    inputs: [{ name: "target", type: "address", internalType: "address" }],
+  },
+  {
+    type: "error",
+    name: "AddressInsufficientBalance",
+    inputs: [{ name: "account", type: "address", internalType: "address" }],
+  },
   { type: "error", name: "ECDSAInvalidSignature", inputs: [] },
   {
     type: "error",
@@ -444,6 +508,7 @@ const treasureABI = [
       { name: "owner", type: "address", internalType: "address" },
     ],
   },
+  { type: "error", name: "FailedInnerCall", inputs: [] },
   { type: "error", name: "InvalidSignature", inputs: [] },
   {
     type: "error",
@@ -454,6 +519,11 @@ const treasureABI = [
     type: "error",
     name: "OwnableUnauthorizedAccount",
     inputs: [{ name: "account", type: "address", internalType: "address" }],
+  },
+  {
+    type: "error",
+    name: "SafeERC20FailedOperation",
+    inputs: [{ name: "token", type: "address", internalType: "address" }],
   },
 ];
 

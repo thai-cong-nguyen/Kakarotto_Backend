@@ -63,6 +63,39 @@ const itemABI = [
   },
   {
     type: "function",
+    name: "getItemInformation",
+    inputs: [{ name: "_tokenId", type: "uint256", internalType: "uint256" }],
+    outputs: [
+      {
+        name: "",
+        type: "tuple",
+        internalType: "struct NFTLibrary.ItemNftInformation",
+        components: [
+          { name: "tokenId", type: "uint256", internalType: "uint256" },
+          { name: "rarity", type: "uint256", internalType: "uint256" },
+          { name: "attributeCount", type: "uint256", internalType: "uint256" },
+          {
+            name: "attributes",
+            type: "tuple[]",
+            internalType: "struct NFTLibrary.ItemAttribute[]",
+            components: [
+              {
+                name: "attribute",
+                type: "uint8",
+                internalType: "enum NFTLibrary.Attribute",
+              },
+              { name: "value", type: "uint256", internalType: "uint256" },
+              { name: "isIncrease", type: "bool", internalType: "bool" },
+              { name: "isPercentage", type: "bool", internalType: "bool" },
+            ],
+          },
+        ],
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "isApprovedForAll",
     inputs: [
       { name: "owner", type: "address", internalType: "address" },
@@ -85,9 +118,13 @@ const itemABI = [
         type: "uint8[]",
         internalType: "enum NFTLibrary.Attribute[]",
       },
-      { name: "_values", type: "uint256[]", internalType: "uint256[]" },
+      {
+        name: "_attributeValues",
+        type: "uint256[]",
+        internalType: "uint256[]",
+      },
       { name: "_isIncreases", type: "bool[]", internalType: "bool[]" },
-      { name: "_isPercentss", type: "bool[]", internalType: "bool[]" },
+      { name: "_isPercentages", type: "bool[]", internalType: "bool[]" },
     ],
     outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
     stateMutability: "nonpayable",

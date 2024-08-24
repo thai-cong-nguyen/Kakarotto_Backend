@@ -35,7 +35,7 @@ const marketplaceABI = [
   },
   {
     type: "function",
-    name: "THRESHOLD_ORDER_STARTED",
+    name: "THRESHOLD_ORDER",
     inputs: [],
     outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
     stateMutability: "view",
