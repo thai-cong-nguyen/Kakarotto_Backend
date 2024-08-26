@@ -7,32 +7,39 @@ import getAddress from "../utils/getAddress.util.js";
 import getProvider from "../utils/getProvider.util.js";
 
 const OWNER_PRIVATE_KEY = process.env.OWNER_PRIVATE_KEY;
-const NFTFactoryABI = getABI("KakarottoFactory");
+const NFTTreasureABI = getABI("KakarottoTreasure");
 
-const mintNFT = async ({ creator, signature, tokenId, value, data }) => {
+const mintNFT = async ({
+  creator,
+  signature,
+  tokenId,
+  value,
+  data,
+  chainId,
+}) => {
   try {
-    const NFTFactoryAddress = getAddress("KakarottoFactory");
-    const provider = new ethers.JsonRpcProvider(getProvider());
+    const NFTTreasureAddress = getAddress("KakarottoTreasure", chainId);
+    const provider = new ethers.JsonRpcProvider(getProvider(chainId));
     const wallet = createWallet({
       privateKey: `0x${OWNER_PRIVATE_KEY}`,
       provider,
     });
-    const NFTFactoryContract = createContract({
-      address: NFTFactoryAddress,
-      ABI: NFTFactoryABI,
+    const NFTTreasureContract = createContract({
+      address: NFTTreasureAddress,
+      ABI: NFTTreasureABI,
       runner: wallet,
     });
-    const tx = await NFTFactoryContract.createTreasure(
+    const tx = await NFTTreasureContract.mint(
       creator,
       signature,
       tokenId,
-      value,
+      ethers.parseEther(value + ""),
       data
     );
     const txResponse = await tx.wait();
     return txResponse;
   } catch (error) {
-    throw new Error(error);
+    throw error;
   }
 };
 

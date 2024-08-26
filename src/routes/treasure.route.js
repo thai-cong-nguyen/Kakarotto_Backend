@@ -14,9 +14,11 @@ import {
 } from "../middlewares/treasureValidation.middleware.js";
 
 router.get("/", retrieveTreasureMetadataController);
-router.get("/rarity", getTreasureRarityController);
-router.get("/metadata", getTreasuresMetadataController);
-router.post("/mint", mintTreasureValidation, mintTreasureController);
+router.post(
+  "/mint",
+  // mintTreasureValidation,
+  mintTreasureController
+);
 router.post(
   "/open",
   // openTreasureValidation,

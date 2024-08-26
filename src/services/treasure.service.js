@@ -1,5 +1,6 @@
 import "dotenv/config";
 
+import axios from "axios";
 import { fetchFile } from "./pinata.service.js";
 import apiReturn from "../utils/apiReturn.util.js";
 import { mintNFT, openNFT } from "../contracts/treasure.contract.js";
@@ -14,6 +15,7 @@ import {
   generateItemMetadata,
 } from "../modules/item.module.js";
 import { uploadMetadataSupabase } from "../modules/metadata.module.js";
+import { retrieveTokenURIFromBucket } from "../modules/supabase.module.js";
 
 const PINATA_TREASURE_METADATA_GROUP_CID =
   process.env.PINATA_TREASURE_METADATA_GROUP_CID;
@@ -71,15 +73,22 @@ const getTreasureRarity = async () => {
   }
 };
 
-const mintTreasureNFT = async ({ creator, signature, value, data }) => {
+const mintTreasureNFT = async ({
+  creator,
+  signature,
+  value,
+  data,
+  tokenId,
+  chainId,
+}) => {
   try {
-    const tokenId = generateTreasureRarity();
     const txResponse = await mintNFT({
       creator,
       signature,
       tokenId,
       value,
-      data: data ? data : "",
+      data: data ? data : "0x",
+      chainId,
     });
     console.log("Mint NFT response: ", txResponse);
     const result = {

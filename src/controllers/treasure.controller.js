@@ -33,12 +33,14 @@ const getTreasureRarityController = async (req, res) => {
 
 const mintTreasureController = async (req, res) => {
   try {
-    const { creator, signature, value, data } = req.body;
+    const { creator, signature, value, data, tokenId, chainId } = req.body;
     const response = await mintTreasureNFT({
       creator,
       signature,
       value,
       data,
+      tokenId,
+      chainId,
     });
     return response.error
       ? res.status(response.error.code).json(response.error)
@@ -69,7 +71,8 @@ const openTreasureController = async (req, res) => {
 
 const retrieveTreasureMetadataController = async (req, res) => {
   try {
-    const { tokenURI } = req.body;
+    const { tokenURI } = req.query;
+    console.log(tokenURI);
     const response = await retrieveTreasureMetadata({ tokenURI });
     return response.error
       ? res.status(response.error.code).json(response.error)
