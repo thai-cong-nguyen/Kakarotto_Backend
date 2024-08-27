@@ -77,21 +77,14 @@ const generateMetadataController = async (req, res) => {
 
 const mintNFTCharacterController = async (req, res) => {
   try {
-    const {
-      creator,
-      createNFTSignature,
-      networkId,
-      rarityNumber,
-      attributes,
-      tokenURI,
-    } = req.body;
+    const { creator, createNFTSignature, networkId, tokenURI, image } =
+      req.body;
     const response = await mintCharacter({
       creator,
       createNFTSignature,
       networkId,
-      rarityNumber,
-      attributes,
       tokenURI,
+      image,
     });
     return response.error
       ? res.status(response.error.code).json(response.error)
@@ -132,7 +125,7 @@ export {
   // generateCharacterController,
   generateImageController,
   // generateAttributeController,
-  generateMetadataController,
+  // generateMetadataController,
   mintNFTCharacterController,
   retrieveCharacterMetadataController,
   upLevelCharacterController,

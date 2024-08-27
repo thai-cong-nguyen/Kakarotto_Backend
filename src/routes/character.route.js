@@ -5,7 +5,7 @@ import {
   // generateCharacterController,
   generateImageController,
   // generateAttributeController,
-  generateMetadataController,
+  // generateMetadataController,
   mintNFTCharacterController,
   retrieveCharacterMetadataController,
   upLevelCharacterController,
@@ -15,7 +15,7 @@ router.get("/", retrieveCharacterMetadataController);
 router.get("/image", generateImageController);
 // router.post("/attributes", generateAttributeController);
 // router.post("/generate", generateCharacterController);
-router.post("/createMetadata", generateMetadataController);
+// router.post("/createMetadata", generateMetadataController);
 router.post("/mint", mintNFTCharacterController);
 router.put("/up_level", upLevelCharacterController);
 

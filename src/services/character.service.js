@@ -97,7 +97,67 @@ const generateCharacter = async ({
   }
 };
 
-const generateMetadata = async ({ name, description, image }) => {
+// const generateMetadata = async ({ name, description, image, fileName }) => {
+//   try {
+//     // Generate Rarity
+//     const rarity = generateCharacterRarity();
+//     // Generate Attribute
+//     const seedValue = Math.floor(Math.random() * 100 * Date.now());
+//     const { power, defend, agility, intelligence, luck } =
+//       generateCharacterAttributes(characterAttributeWeight, rarity, seedValue);
+//     // Generate Metadata
+//     const { jsonFile } = generateCharacterMetadata({
+//       name,
+//       description,
+//       image,
+//       level: 0,
+//       exp: 0,
+//       rarity,
+//       power,
+//       defend,
+//       agility,
+//       intelligence,
+//       luck,
+//     });
+
+//     // Upload Metadata to Supabase
+//     const uploadMetadataResponse = await uploadMetadataSupabase({
+//       jsonFile,
+//       fileName: fileName,
+//       bucket: "Character",
+//     });
+//     if (uploadMetadataResponse.error) {
+//       throw new Error(uploadMetadataResponse.message);
+//     }
+
+//     const tokenURI = uploadMetadataResponse.path;
+
+//     return apiReturn.success(200, "Metadata generated", {
+//       tokenURI,
+//       traits: {
+//         rarity,
+//         attributes: {
+//           power,
+//           defend,
+//           agility,
+//           intelligence,
+//           luck,
+//         },
+//       },
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     return apiReturn.error(400, error.message);
+//   }
+// };
+
+const mintCharacter = async ({
+  creator,
+  createNFTSignature,
+  networkId,
+  tokenURI,
+  image,
+}) => {
   try {
     // Generate Rarity
     const rarity = generateCharacterRarity();
@@ -105,10 +165,20 @@ const generateMetadata = async ({ name, description, image }) => {
     const seedValue = Math.floor(Math.random() * 100 * Date.now());
     const { power, defend, agility, intelligence, luck } =
       generateCharacterAttributes(characterAttributeWeight, rarity, seedValue);
+    const traits = {
+      rarity,
+      attributes: {
+        power,
+        defend,
+        agility,
+        intelligence,
+        luck,
+      },
+    };
     // Generate Metadata
     const { jsonFile } = generateCharacterMetadata({
-      name,
-      description,
+      name: "Kakarotto Character",
+      description: "Kakarotto is comming to the world",
       image,
       level: 0,
       exp: 0,
@@ -119,53 +189,22 @@ const generateMetadata = async ({ name, description, image }) => {
       intelligence,
       luck,
     });
-
     // Upload Metadata to Supabase
     const uploadMetadataResponse = await uploadMetadataSupabase({
       jsonFile,
-      fileName: "Character_" + Date.now(),
+      fileName: tokenURI,
       bucket: "Character",
     });
     if (uploadMetadataResponse.error) {
       throw new Error(uploadMetadataResponse.message);
     }
 
-    const tokenURI = uploadMetadataResponse.path;
-
-    return apiReturn.success(200, "Metadata generated", {
-      tokenURI,
-      traits: {
-        rarity,
-        attributes: {
-          power,
-          defend,
-          agility,
-          intelligence,
-          luck,
-        },
-      },
-    });
-  } catch (error) {
-    console.log(error);
-    return apiReturn.error(400, error.message);
-  }
-};
-
-const mintCharacter = async ({
-  creator,
-  createNFTSignature,
-  networkId,
-  rarityNumber,
-  attributes,
-  tokenURI,
-}) => {
-  try {
     // Generate the Character NFT
     const generateCharacterResponse = await generateCharacter({
       creator,
       createNFTSignature,
-      rarityNumber,
-      attributes,
+      rarityNumber: rarity,
+      attributes: traits.attributes,
       tokenURI,
       networkId,
     });
@@ -173,11 +212,10 @@ const mintCharacter = async ({
       throw new Error(generateCharacterResponse.error.message);
     }
 
-    return apiReturn.success(
-      200,
-      "Character minted",
-      generateCharacterResponse.data
-    );
+    return apiReturn.success(200, "Character minted", {
+      traits,
+      response: generateCharacterResponse.data,
+    });
   } catch (error) {
     console.log(error);
     return apiReturn.error(400, error.message);
@@ -250,5 +288,5 @@ export {
   mintCharacter,
   retrieveCharacterMetadata,
   upLevelCharacter,
-  generateMetadata,
+  // generateMetadata,
 };
