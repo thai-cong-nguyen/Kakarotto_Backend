@@ -2,10 +2,10 @@ import express from "express";
 const router = express.Router();
 
 import {
-  generateCharacterController,
+  // generateCharacterController,
   generateImageController,
-  generateAttributeController,
-  // generateMetadataController,
+  // generateAttributeController,
+  generateMetadataController,
   mintNFTCharacterController,
   retrieveCharacterMetadataController,
   upLevelCharacterController,
@@ -13,8 +13,9 @@ import {
 
 router.get("/", retrieveCharacterMetadataController);
 router.get("/image", generateImageController);
-router.post("/attributes", generateAttributeController);
-router.post("/generate", generateCharacterController);
+// router.post("/attributes", generateAttributeController);
+// router.post("/generate", generateCharacterController);
+router.post("/createMetadata", generateMetadataController);
 router.post("/mint", mintNFTCharacterController);
 router.put("/up_level", upLevelCharacterController);
 
