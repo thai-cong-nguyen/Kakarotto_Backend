@@ -17,6 +17,7 @@ import { characterAttributeWeight } from "../utils/attribute.util.js";
 import axios from "axios";
 import { uploadMetadataSupabase } from "../modules/metadata.module.js";
 import { token } from "morgan";
+import { characterRarityWeight } from "../utils/rarity.util.js";
 
 const PINATA_KAKAROTTO_CHARACTER_GROUP_CID =
   process.env.PINATA_KAKAROTTO_CHARACTER_GROUP_CID;
@@ -160,13 +161,15 @@ const mintCharacter = async ({
 }) => {
   try {
     // Generate Rarity
-    const rarity = generateCharacterRarity();
+    const { rarity, rarityNumber } = generateCharacterRarity(
+      characterRarityWeight
+    );
     // Generate Attribute
     const seedValue = Math.floor(Math.random() * 100 * Date.now());
     const { power, defend, agility, intelligence, luck } =
       generateCharacterAttributes(characterAttributeWeight, rarity, seedValue);
     const traits = {
-      rarity,
+      rarityNumber,
       attributes: {
         power,
         defend,
@@ -176,13 +179,13 @@ const mintCharacter = async ({
       },
     };
     // Generate Metadata
-    const { jsonFile } = generateCharacterMetadata({
+    const { metadata } = generateCharacterMetadata({
       name: "Kakarotto Character",
       description: "Kakarotto is comming to the world",
       image,
       level: 0,
       exp: 0,
-      rarity,
+      rarity: rarityNumber,
       power,
       defend,
       agility,
@@ -191,7 +194,7 @@ const mintCharacter = async ({
     });
     // Upload Metadata to Supabase
     const uploadMetadataResponse = await uploadMetadataSupabase({
-      jsonFile,
+      metadata,
       fileName: tokenURI,
       bucket: "Character",
     });
@@ -203,7 +206,7 @@ const mintCharacter = async ({
     const generateCharacterResponse = await generateCharacter({
       creator,
       createNFTSignature,
-      rarityNumber: rarity,
+      rarityNumber,
       attributes: traits.attributes,
       tokenURI,
       networkId,

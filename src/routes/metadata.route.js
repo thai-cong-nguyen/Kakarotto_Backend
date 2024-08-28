@@ -1,8 +1,13 @@
 import express from "express";
 const router = express.Router();
 
-import { uploadMetadataToSupabaseController } from "../controllers/metadata.controller.js";
+import {
+  uploadMetadataToSupabaseController,
+  updateMetadataInBucketController,
+} from "../controllers/metadata.controller.js";
 
 router.post("/upload", uploadMetadataToSupabaseController);
+
+router.patch("/update", updateMetadataInBucketController);
 
 export { router };

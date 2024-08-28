@@ -53,7 +53,10 @@ export const generateCharacterAttributes = (
 export const generateCharacterRarity = (characterRarityWeight) => {
   const rarity = rarityPicked(characterRarityWeight);
   const rarityNumber = rarityNumbers[rarity];
-  return rarityNumber;
+  return {
+    rarity,
+    rarityNumber,
+  };
 };
 
 export const generateCharacterMetadata = ({
@@ -69,12 +72,12 @@ export const generateCharacterMetadata = ({
   intelligence,
   luck,
 }) => {
-  const metadata = {
+  let metadata = {
     name,
     description,
     image,
   };
-  metadata.attribute = [
+  metadata.attributes = [
     {
       trait_type: "Level",
       value: level,
@@ -119,6 +122,5 @@ export const generateCharacterMetadata = ({
 
   return {
     metadata,
-    jsonFile,
   };
 };

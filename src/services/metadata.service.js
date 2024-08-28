@@ -1,4 +1,7 @@
-import { uploadMetadataSupabase } from "../modules/metadata.module.js";
+import {
+  updateMetadataSupabase,
+  uploadMetadataSupabase,
+} from "../modules/metadata.module.js";
 import apiReturn from "../utils/apiReturn.util.js";
 
 export async function uploadMetadataToSupabase({
@@ -27,6 +30,29 @@ export async function uploadMetadataToSupabase({
     return apiReturn.success(200, "Metadata uploaded", {
       metadata,
       jsonFile: uploadMetadataResponse.path,
+    });
+  } catch (error) {
+    console.log(error);
+    return apiReturn.error(400, error.message);
+  }
+}
+
+export async function updateMetadataInBucket({
+  fileName,
+  bucket,
+  fileContent,
+}) {
+  try {
+    const updateMetadata = await updateMetadataSupabase({
+      fileContent,
+      fileName,
+      bucket,
+    });
+    if (updateMetadata.error) {
+      throw new Error(updateMetadata.error);
+    }
+    return apiReturn.success(200, "Metadata uploaded", {
+      jsonFile: updateMetadata.path,
     });
   } catch (error) {
     console.log(error);
